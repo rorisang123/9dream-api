@@ -1,16 +1,3 @@
-/* Entities
-const UserModel = {};
-const organisationUserModel = {}
-const campaignerUserModel = {}
-const voterUserModel = {}
-const expertUserModel = {}
-const voteModel = {}
-const transactionModel = {}
-const promiseModel = {}
-const reviewModel = {}
-const campaignModel = {}
-*/
-
 const express = require('express')
 const bodyParser = require('body-parser')
 var cors = require('cors')
