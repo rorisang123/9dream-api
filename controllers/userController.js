@@ -1,7 +1,7 @@
 const db = require('../database/db');
 
 const getUsers = (request, response) => {
-    db.query('SELECT * FROM users ORDER BY user_id', (error, results) => {
+    db.query('SELECT * FROM users', (error, results) => {
       if (error) {
         response.status(500).json({ message: error.message });
       }
@@ -9,55 +9,76 @@ const getUsers = (request, response) => {
     })
   }
 
-  const getUserById = (request, response) => {
-    const id = parseInt(request.params.id)
+  const getUserById = async (req, res) => {
+    const userId = req.params.id;
   
-    db.query('SELECT * FROM users WHERE user_id = $1', [id], (error, results) => {
-      if (error) {
-        response.status(500).json({ message: error.message });
+    try {
+      const result = await db.query('SELECT * FROM users WHERE user_id = $1', [userId]);
+  
+      if (result.rows.length > 0) {
+        res.status(200).json(result.rows[0]);
+      } else {
+        res.status(404).json({ message: 'User not found' });
       }
-      response.status(200).json(results.rows)
-    })
-  }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
   
-  const createUser = (request, response) => {
-    const { name, email } = request.body
+  const createUser = async (req, res) => {
+    const { date_of_birth, gender, wallet_address, first_name, last_name, email } = req.body;
   
-    db.query('INSERT INTO users (name, email) VALUES ($1, $2)', [name, email], (error, results) => {
-      if (error) {
-        response.status(500).json({ message: error.message });
+    try {
+      const result = await db.query('INSERT INTO users (date_of_birth, gender, wallet_address, first_name, last_name, email) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [date_of_birth, gender, wallet_address, first_name, last_name, email]);
+  
+      if (result.rows.length > 0) {
+        res.status(201).json(result.rows[0]);
+      } else {
+        res.status(500).json({ message: 'Failed to create user' });
       }
-      response.status(201).send(`User added with ID: ${results.insertId}`)
-    })
-  }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
   
-  const updateUser = (request, response) => {
-    const id = parseInt(request.params.id)
-    const { name, email } = request.body
+  const updateUser = async (req, res) => {
+    const userId = req.params.id;
+    const { date_of_birth, gender, wallet_address, first_name, last_name,  email } = req.body;
   
-    db.query(
-      'UPDATE users SET name = $1, email = $2 WHERE user_id = $3',
-      [name, email, id],
-      (error, results) => {
-        if (error) {
-          response.status(500).json({ message: error.message });
-        }
-        response.status(200).send(`User modified with ID: ${id}`)
+    try {
+      const result = await db.query('UPDATE users SET date_of_birth = $2, gender = $3, wallet_address = $4, first_name = $5, last_name = $6,  email = $7 WHERE user_id = $1 RETURNING *', [userId, date_of_birth, gender, wallet_address, first_name, last_name,  email]);
+  
+      if (result.rows.length > 0) {
+        res.status(200).json(result.rows[0]);
+      } else {
+        res.status(404).json({ message: 'User not found' });
       }
-    )
-  }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
   
-  const deleteUser = (request, response) => {
-    const id = parseInt(request.params.id)
+  const deleteUser = async (req, res) => {
+    const userId = req.params.id;
   
-    db.query('DELETE FROM users WHERE user_id = $1', [id], (error, results) => {
-      if (error) {
-        response.status(500).json({ message: error.message });
+    try {
+      const result = await db.query('DELETE FROM users WHERE user_id = $1 RETURNING *', [userId]);
+  
+      if (result.rows.length > 0) {
+        res.status(200).json({ message: 'User deleted successfully' });
+      } else {
+        res.status(404).json({ message: 'User not found' });
       }
-      response.status(200).send(`User deleted with ID: ${id}`)
-    })
-  }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
   
+  // eslint-disable-next-line no-undef
   module.exports = {
     getUsers,
     getUserById,
