@@ -1,7 +1,7 @@
 const db = require('../database/db');
 
 const getVoters = (request, response) => {
-    db.query('SELECT * FROM Voter ORDER BY Voter_id', (error, results) => {
+    db.query('SELECT * FROM Voters', (error, results) => {
       if (error) {
         response.status(500).json({ message: error.message });
       }
@@ -9,55 +9,76 @@ const getVoters = (request, response) => {
     })
   }
 
-const getVoterById = (request, response) => {
-const id = parseInt(request.params.id)
-
-db.query('SELECT * FROM Voter WHERE Voter_id = $1', [id], (error, results) => {
-    if (error) {
-    response.status(500).json({ message: error.message });
-    }
-    response.status(200).json(results.rows)
-})
-}
-
-const createVoter = (request, response) => {
-const { name, email } = request.body
-
-db.query('INSERT INTO Voter (name, email) VALUES ($1, $2)', [name, email], (error, results) => {
-    if (error) {
-    response.status(500).json({ message: error.message });
-    }
-    response.status(201).send(`Voter added with ID: ${results.insertId}`)
-})
-}
-
-const updateVoter = (request, response) => {
-const id = parseInt(request.params.id)
-const { name, email } = request.body
-
-db.query(
-    'UPDATE Voter SET name = $1 WHERE Voter_id = $3',
-    [name, email, id],
-    (error, results) => {
-    if (error) {
-        response.status(500).json({ message: error.message });
-    }
-    response.status(200).send(`Voter modified with ID: ${id}`)
-    }
-)
-}
-
-const deleteVoter = (request, response) => {
-const id = parseInt(request.params.id)
-
-db.query('DELETE FROM Voter WHERE Voter_id = $1', [id], (error, results) => {
-    if (error) {
-    response.status(500).json({ message: error.message });
-    }
-    response.status(200).send(`Voter deleted with ID: ${id}`)
-})
-}
+const getVoterById = async (req, res) => {
+    const VoterId = req.params.id;
   
+    try {
+      const result = await db.query('SELECT * FROM Voters WHERE Voter_id = $1', [VoterId]);
+  
+      if (result.rows.length > 0) {
+        res.status(200).json(result.rows[0]);
+      } else {
+        res.status(404).json({ message: 'Voter not found' });
+      }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+  
+  const createVoter = async (req, res) => {
+    const { registration_status, user_id } = req.body;
+  
+    try {
+      const result = await db.query('INSERT INTO Voters (registration_status, user_id) VALUES ($1, $2) RETURNING *', [registration_status, user_id]);
+  
+      if (result.rows.length > 0) {
+        res.status(201).json(result.rows[0]);
+      } else {
+        res.status(500).json({ message: 'Failed to create Voter' });
+      }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+  
+  const updateVoter = async (req, res) => {
+    const VoterId = req.params.id;
+    const { registration_status, user_id } = req.body;
+  
+    try {
+      const result = await db.query('UPDATE Voters SET registration_status = $2, user_id = $3 WHERE Voter_id = $1 RETURNING *', [VoterId, registration_status, user_id]);
+  
+      if (result.rows.length > 0) {
+        res.status(200).json(result.rows[0]);
+      } else {
+        res.status(404).json({ message: 'Voter not found' });
+      }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+  
+  const deleteVoter = async (req, res) => {
+    const VoterId = req.params.id;
+  
+    try {
+      const result = await db.query('DELETE FROM Voters WHERE Voter_id = $1 RETURNING *', [VoterId]);
+  
+      if (result.rows.length > 0) {
+        res.status(200).json({ message: 'Voter deleted successfully' });
+      } else {
+        res.status(404).json({ message: 'Voter not found' });
+      }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+  
+  // eslint-disable-next-line no-undef
   module.exports = {
     getVoters,
     getVoterById,
