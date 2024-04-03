@@ -8,7 +8,7 @@ const getVotes = (request, response) => {
       response.status(200).json(results.rows)
     })
   }
-
+/*
 const getVoteById = async (req, res) => {
     const VoteId = req.params.id;
   
@@ -24,6 +24,15 @@ const getVoteById = async (req, res) => {
       console.error('Error executing query', err);
       res.status(500).json({ message: 'Internal server error' });
     }
+  };*/
+
+  const getNumberOfvotes = async (request, response) => {
+    db.query('SELECT count(*) FROM votes', (error, results) => {
+      if (error) {
+        response.status(500).json({ message: error.message });
+      }
+      response.status(200).json(results.rows)
+    })
   };
   
   const createVote = async (req, res) => {
@@ -81,7 +90,8 @@ const getVoteById = async (req, res) => {
   // eslint-disable-next-line no-undef
   module.exports = {
     getVotes,
-    getVoteById,
+    //getVoteById,
+    getNumberOfvotes,
     createVote,
     updateVote,
     deleteVote,

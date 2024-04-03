@@ -7,7 +7,7 @@ const getPromises = (request, response) => {
       }
       response.status(200).json(results.rows)
     })
-  }
+}
 
 const getPromiseById = async (req, res) => {
     const PromiseId = req.params.id;
@@ -25,6 +25,23 @@ const getPromiseById = async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   };
+
+  const getCampaignBudget = async (req, res) => {
+    const campaignId = req.params.campaign_id;
+  
+    try {
+      const result = await db.query('SELECT SUM(promise_value) FROM promises where campaign_id = $1', [campaignId]);
+  
+      if (result.rows.length > 0) {
+        res.status(200).json(result.rows[0]);
+      } else {
+        res.status(404).json({ message: 'Promise not found' });
+      }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+}
   
   const createPromise = async (req, res) => {
     const { smart_contract_address, owner_id, organisation_id, timestamp, value, campaign_id } = req.body;
@@ -82,6 +99,7 @@ const getPromiseById = async (req, res) => {
   module.exports = {
     getPromises,
     getPromiseById,
+    getCampaignBudget,
     createPromise,
     updatePromise,
     deletePromise,

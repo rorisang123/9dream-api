@@ -8,7 +8,7 @@ const getCampaigns = (request, response) => {
       response.status(200).json(results.rows)
     })
   }
-
+/*
 const getCampaignById = async (req, res) => {
     const CampaignId = req.params.id;
   
@@ -24,6 +24,24 @@ const getCampaignById = async (req, res) => {
       console.error('Error executing query', err);
       res.status(500).json({ message: 'Internal server error' });
     }
+  };*/
+
+  const getNumberOfCampaigns = async (request, response) => {
+    db.query('SELECT count(*) FROM campaigns', (error, results) => {
+      if (error) {
+        response.status(500).json({ message: error.message });
+      }
+      response.status(200).json(results.rows)
+    })
+  };
+
+  const getTopCampaigns = async (request, response) => {
+    db.query('SELECT campaigns.*, COUNT(votes.campaign_id) AS vote_count FROM campaigns LEFT JOIN votes ON campaigns.campaign_id = votes.campaign_id GROUP BY campaigns.campaign_id ORDER BY vote_count DESC LIMIT 5;', (error, results) => {
+      if (error) {
+        response.status(500).json({ message: error.message });
+      }
+      response.status(200).json(results.rows)
+    })
   };
   
   const createCampaign = async (req, res) => {
@@ -81,7 +99,9 @@ const getCampaignById = async (req, res) => {
   // eslint-disable-next-line no-undef
   module.exports = {
     getCampaigns,
-    getCampaignById,
+    getNumberOfCampaigns,
+    //getCampaignById,
+    getTopCampaigns,
     createCampaign,
     updateCampaign,
     deleteCampaign,
