@@ -9,14 +9,18 @@ const getPromises = (request, response) => {
     })
 }
 
-const getPromiseById = async (req, res) => {
-    const PromiseId = req.params.id;
+  const getPromiseById = async (request, res) => {
+    const organisation_id = request.params.id;
   
     try {
-      const result = await db.query('SELECT * FROM Promises WHERE Promise_id = $1', [PromiseId]);
+      const dbResult = await db.query(`SELECT promises.*, organisations.name as organisation_name
+      FROM promises
+      JOIN organisations ON promises.organisation_id = organisations.organisation_id
+      WHERE promises.promise_id = $1;
+      `, [organisation_id]);
   
-      if (result.rows.length > 0) {
-        res.status(200).json(result.rows[0]);
+      if (dbResult.rows.length > 0) {
+        res.status(200).json(dbResult.rows[0]);
       } else {
         res.status(404).json({ message: 'Promise not found' });
       }

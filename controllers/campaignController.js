@@ -68,8 +68,6 @@ const getCampaigns = (request, response) => {
     }
   };
   
-
-  
   const createCampaign = async (req, res) => {
     const { campaigner_id } = req.body;
   
