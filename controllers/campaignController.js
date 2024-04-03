@@ -8,23 +8,6 @@ const getCampaigns = (request, response) => {
       response.status(200).json(results.rows)
     })
   }
-/*
-const getCampaignById = async (req, res) => {
-    const CampaignId = req.params.id;
-  
-    try {
-      const result = await db.query('SELECT * FROM Campaigns WHERE Campaign_id = $1', [CampaignId]);
-  
-      if (result.rows.length > 0) {
-        res.status(200).json(result.rows[0]);
-      } else {
-        res.status(404).json({ message: 'Campaign not found' });
-      }
-    } catch (err) {
-      console.error('Error executing query', err);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  };*/
 
   const getNumberOfCampaigns = async (request, response) => {
     db.query('SELECT count(*) FROM campaigns', (error, results) => {
@@ -43,6 +26,49 @@ const getCampaignById = async (req, res) => {
       response.status(200).json(results.rows)
     })
   };
+
+  const getCampaignById = async (request, res) => {
+    const CampaignId = request.params.id;
+  
+    try {
+      const dbResult = await db.query(`SELECT 
+      campaigns.*,
+      CONCAT(users.first_name, ' ', users.last_name) AS user_name,
+      COALESCE(vote_counts.vote_count, 0) AS num_votes,
+      COALESCE(promise_counts.promise_count, 0) AS num_promise,
+      COALESCE(promise_sums.promise_sum, 0) AS promise_value_sum
+  FROM campaigns
+  LEFT JOIN users ON campaigns.campaigner_id = users.user_id
+  LEFT JOIN (
+      SELECT campaign_id, COUNT(*) AS vote_count
+      FROM votes
+      GROUP BY campaign_id
+  ) AS vote_counts ON campaigns.campaign_id = vote_counts.campaign_id
+  LEFT JOIN (
+      SELECT campaign_id, COUNT(*) AS promise_count
+      FROM promises
+      GROUP BY campaign_id
+  ) AS promise_counts ON campaigns.campaign_id = promise_counts.campaign_id
+  LEFT JOIN (
+      SELECT campaign_id, SUM(promise_value) AS promise_sum
+      FROM promises
+      GROUP BY campaign_id
+  ) AS promise_sums ON campaigns.campaign_id = promise_sums.campaign_id
+  WHERE campaigns.campaign_id = $1;
+  `, [CampaignId]);
+  
+      if (dbResult.rows.length > 0) {
+        res.status(200).json(dbResult.rows[0]);
+      } else {
+        res.status(404).json({ message: 'Campaign not found' });
+      }
+    } catch (err) {
+      console.error('Error executing query', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+  
+
   
   const createCampaign = async (req, res) => {
     const { campaigner_id } = req.body;
@@ -100,7 +126,7 @@ const getCampaignById = async (req, res) => {
   module.exports = {
     getCampaigns,
     getNumberOfCampaigns,
-    //getCampaignById,
+    getCampaignById,
     getTopCampaigns,
     createCampaign,
     updateCampaign,
