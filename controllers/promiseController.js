@@ -9,24 +9,33 @@ const getPromises = (request, response) => {
     })
 }
 
-  const getPromiseById = async (request, res) => {
-    const organisation_id = request.params.id;
+const getPromiseById = (request, response) => {
+  db.query('SELECT * FROM promises WHERE promise_id = $1', [promise_id], (error, results) => {
+    if (error) {
+      response.status(500).json({ message: error.message });
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+  const getPromiseByCampaignId = async (request, response) => {
+    const campaign_id = request.params.id;
   
     try {
       const dbResult = await db.query(`SELECT promises.*, organisations.name as organisation_name
       FROM promises
       JOIN organisations ON promises.organisation_id = organisations.organisation_id
-      WHERE promises.promise_id = $1;
-      `, [organisation_id]);
+      WHERE promises.campaign_id = $1;
+      `, [campaign_id]);
   
       if (dbResult.rows.length > 0) {
-        res.status(200).json(dbResult.rows[0]);
+        response.status(200).json(dbResult.rows[0]);
       } else {
-        res.status(404).json({ message: 'Promise not found' });
+        response.status(404).json({ message: 'Promise not found' });
       }
     } catch (err) {
       console.error('Error executing query', err);
-      res.status(500).json({ message: 'Internal server error' });
+      response.status(500).json({ message: 'Internal server error' });
     }
   };
 
@@ -103,6 +112,7 @@ const getPromises = (request, response) => {
   module.exports = {
     getPromises,
     getPromiseById,
+    getPromiseByCampaignId,
     getCampaignBudget,
     createPromise,
     updatePromise,
