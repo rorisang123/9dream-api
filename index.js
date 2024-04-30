@@ -1,10 +1,12 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const bcrypt = require('bcrypt');
 var cors = require('cors')
 const app = express()
 const port = 3000
 
 const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes')
 const campaignerRoutes = require('./routes/campaignerRoutes');
 const campaignRoutes = require('./routes/campaignRoutes');
 const expertRoutes = require('./routes/expertRoutes');
@@ -30,6 +32,7 @@ app.get('/', (request, response) => {
 })
 
 app.use('/users', userRoutes);
+app.use('/auth', authRoutes)
 app.use('/campaigners', campaignerRoutes);
 app.use('/campaigns', campaignRoutes);
 app.use('/experts', expertRoutes);

@@ -69,22 +69,35 @@ const getCampaigns = (request, response) => {
     }
   };
   
+  const searchCampaign = async (req, res) => {
+    const searchTerm = req.query.term;
+    try {
+        const results = await db.query(
+            `SELECT users.first_name || ' ' || users.last_name AS user_full_name, campaigns.mission_statement
+            FROM campaigns
+            JOIN users ON campaigns.campaigner_id = users.user_id
+            WHERE users.first_name ILIKE $1 || '%' OR users.last_name ILIKE $1 || '%'
+            `,
+            [`%${searchTerm}%`]
+        );
+        res.json(results.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+  }
   
   const createCampaign = async (req, res) => {
-    const { campaigner_id } = req.body;
+    const { campaignerId, slogan, missionStatement } = req.body;
+    const sql = 'INSERT INTO campaigns (campaigner_id, slogan, mission_statement) VALUES ($1, $2, $3) RETURNING campaign_id';
+    const values = [campaignerId, slogan, missionStatement];
   
-    try {
-      const result = await db.query('INSERT INTO Campaigns (campaigner_id) VALUES ($1) RETURNING *', [campaigner_id]);
-  
-      if (result.rows.length > 0) {
-        res.status(201).json(result.rows[0]);
-      } else {
-        res.status(500).json({ message: 'Failed to create Campaign' });
+    db.query(sql, values, (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error', details: err });
       }
-    } catch (err) {
-      console.error('Error executing query', err);
-      res.status(500).json({ message: 'Internal server error' });
-    }
+      res.json({ success: true, message: 'Campaign created successfully', data: result.rows[0] });
+    });
   };
   
   const updateCampaign = async (req, res) => {
@@ -127,6 +140,7 @@ const getCampaigns = (request, response) => {
     getCampaigns,
     getNumberOfCampaigns,
     getCampaignById,
+    searchCampaign,
     getTopCampaigns,
     createCampaign,
     updateCampaign,
