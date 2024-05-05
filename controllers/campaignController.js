@@ -89,16 +89,31 @@ const getCampaigns = (request, response) => {
   
   const createCampaign = async (req, res) => {
     const { campaignerId, slogan, missionStatement } = req.body;
-    const sql = 'INSERT INTO campaigns (campaigner_id, slogan, mission_statement) VALUES ($1, $2, $3) RETURNING campaign_id';
+    const sql = 'INSERT INTO campaigns (campaigner_id, slogan, mission_statement) VALUES ($1, $2, $3) RETURNING *';
     const values = [campaignerId, slogan, missionStatement];
-  
-    db.query(sql, values, (err, result) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error', details: err });
-      }
-      res.json({ success: true, message: 'Campaign created successfully', data: result.rows[0] });
-    });
-  };
+
+    try {
+        const result = await db.query(sql, values);
+        if (result.rows.length) {
+            res.json({
+                success: true,
+                message: 'Campaign created successfully',
+                data: result.rows[0]
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: 'Failed to create campaign'
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            error: 'Database error',
+            details: err.message
+        });
+    }
+};
+
   
   const updateCampaign = async (req, res) => {
     const CampaignId = req.params.id;

@@ -60,7 +60,7 @@ const getPromiseById = (request, response) => {
     const { smart_contract_address, owner_id, organisation_id, timestamp, value, campaign_id } = req.body;
   
     try {
-      const result = await db.query('INSERT INTO Promises (smart_contract_address, owner_id, organisation_id, timestamp, value, campaign_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [smart_contract_address, owner_id, organisation_id, timestamp, value, campaign_id]);
+      const result = await db.query('INSERT INTO Promises (smart_contract_address, owner_id, organisation_id, promise_timestamp, promise_value, campaign_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [smart_contract_address, owner_id, organisation_id, timestamp, value, campaign_id]);
   
       if (result.rows.length > 0) {
         res.status(201).json(result.rows[0]);
